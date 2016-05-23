@@ -6,29 +6,38 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Collections.Specialized;
 
 namespace TestProject
 {
     class ReadFile
     {
-        const int N = 200;
+        const int N = 20000;
 
         //Метод чтения файла - словаря
-        public static HashSet<string> ReadDictionary(string filename)
+        public static StringCollection ReadDictionary(string filename)
         {
-            HashSet<string> wordsDictionary = new HashSet<string>();
-            StreamReader readerDictionary = new System.IO.StreamReader(filename);
-            string wordDictionary;
-            try
+            StringCollection wordsDictionary = new StringCollection();
+            using(StreamReader readerDictionary = new System.IO.StreamReader(filename))
             {
-                while ((wordDictionary = readerDictionary.ReadLine()) != null)
-                    wordsDictionary.Add(wordDictionary);
-                return wordsDictionary;
+                string wordDictionary;
+                try
+                {
+                    while ((wordDictionary = readerDictionary.ReadLine()) != null)
+                        wordsDictionary.Add(wordDictionary);
+                    return wordsDictionary;
+                }
+                catch (FileNotFoundException)
+                {
+                    MessageBox.Show("Файл не найден");
+                }
+                catch (FileLoadException)
+                {
+                    MessageBox.Show("Ошибка чтения файла");
+                }
             }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
+            
+            
             return null;
         }
 
@@ -41,35 +50,46 @@ namespace TestProject
                 if (f.Exists)
                     return true;
             }
-            catch 
+            catch (FileNotFoundException)
             {
                 return false;              
             }
-           
-
             return false;
         }
+
+        
+       
+
+
+
+
         //Чтение файла с текстом и создание html документов
         public static void ReadAndWrite(string fileDictionary, string fileText, string directoryHtml)
         {
+            
             StreamReader sr = new StreamReader(fileText);
             string lineText;
             int countLines = 0;
             int countFile = 0;
-            HashSet<string> wordsDictionary = ReadDictionary(fileDictionary);
+            StringCollection wordsDictionary = ReadDictionary(fileDictionary);
+           
             
             string pathdirectory = directoryHtml.Split('.')[0];
+            
             while ((lineText = sr.ReadLine()) != null)
             {
                 bool flagNextFile = false;
                 string result = "";
                 bool flag = false;
-                string[] wordsTextWithP = lineText.Split(' ');
+                string[] wordsTextWithP= lineText.Split(' ');
 
-
-                foreach (string wordT in wordsTextWithP)
+                
+                
+                foreach (var wordT in wordsTextWithP)
                 {
                     string wordsTextWithoutP = wordT.Replace("[,.!?:;]", "");
+                    
+
                     foreach (var wordD in wordsDictionary)
                     {
                         if (wordsTextWithoutP.ToLower().Equals(wordD.ToLower()))
@@ -79,7 +99,6 @@ namespace TestProject
                     if (flag)
                     {
                         result += wordT.Replace(wordsTextWithoutP, "<b><i>" + wordsTextWithoutP + "</b></i>" + " ");
-
                         flag = false;
                     }
                     else
@@ -101,16 +120,16 @@ namespace TestProject
 
                 if (flagNextFile)
                 {
-                    StreamWriter sw1 = new StreamWriter(pathdirectory + (countFile++) + ".html", true, Encoding.Unicode);
-                    string[] newResult = result.Split(new[] { '.', '?', '!' });
-
-                    for (int j = 1; j < newResult.Length; j++)
+                    using (StreamWriter sw1 = new StreamWriter(pathdirectory + (countFile++) + ".html", true, Encoding.Unicode))
                     {
-                        sw1.Write(newResult[j], newResult[j].Length + 1);
-                    }
-                    flagNextFile = false;
+                        string[] newResult = result.Split(new[] { '.', '?', '!' });
 
-                    
+                        for (int j = 1; j < newResult.Length; j++)
+                            sw1.Write(newResult[j], newResult[j].Length + 1);
+
+                        flagNextFile = false;
+                    }
+  
                 }
                 else
                 {

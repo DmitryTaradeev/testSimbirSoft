@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Threading;
 
 namespace TestProject
 {
@@ -16,6 +17,7 @@ namespace TestProject
         OpenFileDialog dialogDictionaryFile = new OpenFileDialog();
         OpenFileDialog dialogTextFile = new OpenFileDialog();
         SaveFileDialog dialogHtml = new SaveFileDialog();
+        Thread t;
 
         public Form1()
         {
@@ -29,8 +31,8 @@ namespace TestProject
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
-            dialogDictionaryFile.InitialDirectory = "d:\\";
+
+            dialogDictionaryFile.InitialDirectory = Environment.CurrentDirectory; ;
             dialogDictionaryFile.Filter = "Текстовые файлы|*.txt";
             dialogDictionaryFile.RestoreDirectory = true;
             dialogDictionaryFile.ShowDialog();
@@ -40,8 +42,8 @@ namespace TestProject
 
         private void button2_Click(object sender, EventArgs e)
         {
-            
-            dialogTextFile.InitialDirectory = "d:\\";
+
+            dialogTextFile.InitialDirectory = Environment.CurrentDirectory;
             dialogTextFile.Filter = "Текстовые файлы|*.txt";
             dialogTextFile.RestoreDirectory = true;
             dialogTextFile.ShowDialog();
@@ -51,6 +53,7 @@ namespace TestProject
 
         private void button3_Click(object sender, EventArgs e)
         {
+            dialogHtml.InitialDirectory = Environment.CurrentDirectory; 
             dialogHtml.Filter = "Html документы|*.html";
             dialogHtml.ShowDialog();
             labelHtmlFiles.Text = dialogHtml.FileName;
@@ -58,11 +61,17 @@ namespace TestProject
 
         private void button4_Click(object sender, EventArgs e)
         {
+
             if (!ReadFile.CheckFile(dialogTextFile.FileName) || !ReadFile.CheckFile(dialogDictionaryFile.FileName) )
                 MessageBox.Show("Ошибка чтения файла");            
-            else            
-                ReadFile.ReadAndWrite(dialogDictionaryFile.FileName, dialogTextFile.FileName, dialogHtml.FileName);   
+            else
+            {
+                t = new Thread(delegate() { ReadFile.ReadAndWrite(dialogDictionaryFile.FileName, dialogTextFile.FileName, dialogHtml.FileName); });
+                
+            }
         }
+
+       
 
        
 
